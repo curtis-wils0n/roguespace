@@ -1,0 +1,10 @@
+[package]
+name = "roguespace"
+authors = ["Curtis Wilson"]
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rltk = { version = "0.8.7" }
+specs = { version = "0.20.0" }
+specs-derive = { version = "0.4.1" }
