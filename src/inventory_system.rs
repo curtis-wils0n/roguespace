@@ -15,9 +15,17 @@ impl<'a> System<'a> for ItemCollectionSystem {
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (player_entity, mut gamelog, mut wants_pickup, mut positions, names, mut backpack, entities) = data;
+        let (
+            player_entity,
+            mut gamelog,
+            mut wants_pickup,
+            mut positions,
+            names,
+            mut backpack,
+            entities,
+        ) = data;
 
-        for (entity, pickup) in (&entities, &wants_pickup).join() {
+        for (_entity, pickup) in (&entities, &wants_pickup).join() {
             positions.remove(pickup.item);
             backpack
                 .insert(
