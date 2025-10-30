@@ -17,9 +17,12 @@ use damage_system::*;
 mod map_indexing_system;
 use map_indexing_system::*;
 mod melee_combat_system;
+use inventory_system::*;
 use melee_combat_system::*;
+
 mod gamelog;
 mod gui;
+mod inventory_system;
 mod spawner;
 mod visibility_system;
 
@@ -39,6 +42,8 @@ impl State {
         melee.run_now(&self.ecs);
         let mut damage = DamageSystem {};
         damage.run_now(&self.ecs);
+        let mut pickup = ItemCollectionSystem {};
+        pickup.run_now(&self.ecs);
         self.ecs.maintain();
     }
 }
@@ -69,6 +74,23 @@ impl GameState for State {
                 self.run_systems();
                 new_run_state = RunState::AwaitingInput;
             }
+            RunState::ShowInventory => {
+                let result = gui::show_inventory(self, ctx);
+                match result.0 {
+                    gui::ItemMenuResult::Cancel => new_run_state = RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => {}
+                    gui::ItemMenuResult::Selected => {
+                        let item_entity = result.1.unwrap();
+                        let names = self.ecs.read_storage::<Name>();
+                        let mut gamelog = self.ecs.fetch_mut::<gamelog::GameLog>();
+                        gamelog.entries.push(format!(
+                            "You try to use {}, but it isn't written yet",
+                            names.get(item_entity).unwrap().name
+                        ));
+                        new_run_state = RunState::AwaitingInput;
+                    }
+                }
+            }
         }
         {
             let mut run_writer = self.ecs.write_resource::<RunState>();
@@ -77,6 +99,7 @@ impl GameState for State {
 
         delete_the_dead(&mut self.ecs);
 
+        gui::draw_ui(&self.ecs, ctx);
         draw_map(&self.ecs, ctx);
 
         let positions = self.ecs.read_storage::<Position>();
@@ -89,7 +112,6 @@ impl GameState for State {
                 ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph)
             };
         }
-        gui::draw_ui(&self.ecs, ctx);
     }
 }
 
@@ -111,6 +133,10 @@ fn main() -> rltk::BError {
     gs.ecs.register::<CombatStats>();
     gs.ecs.register::<SufferDamage>();
     gs.ecs.register::<WantsToMelee>();
+    gs.ecs.register::<Item>();
+    gs.ecs.register::<Potion>();
+    gs.ecs.register::<InBackpack>();
+    gs.ecs.register::<WantsToPickupItem>();
 
     let map: Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
@@ -119,8 +145,7 @@ fn main() -> rltk::BError {
 
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     for room in map.rooms.iter().skip(1) {
-        let (x, y) = room.center();
-        spawner::random_monster(&mut gs.ecs, x, y);
+        spawner::spawn_room(&mut gs.ecs, room);
     }
 
     gs.ecs.insert(map);

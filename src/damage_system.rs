@@ -1,5 +1,4 @@
 use super::{CombatStats, Name, Player, SufferDamage, gamelog::GameLog};
-use rltk::console;
 use specs::prelude::*;
 
 pub struct DamageSystem {}
@@ -38,7 +37,7 @@ pub fn delete_the_dead(ecs: &mut World) {
                         }
                         dead.push(entity)
                     }
-                    Some(_) => console::log("You are dead."),
+                    Some(_) => log.entries.push("You are dead.".to_string()),
                 }
             }
         }
