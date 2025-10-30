@@ -1,5 +1,7 @@
 use rltk::{GameState, Point, RGB, Rltk};
 use specs::prelude::*;
+use visibility_system::VisibilitySystem;
+
 mod components;
 pub use components::*;
 mod map;
@@ -12,11 +14,9 @@ mod monster_ai_system;
 use monster_ai_system::*;
 mod visibility_system;
 
-use visibility_system::VisibilitySystem;
-
 pub struct State {
     pub ecs: World,
-    pub runstate: RunState,
+    pub run_state: RunState,
 }
 
 impl State {
@@ -33,11 +33,11 @@ impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.cls();
 
-        if self.runstate == RunState::Running {
+        if self.run_state == RunState::Running {
             self.run_systems();
-            self.runstate = RunState::Paused;
+            self.run_state = RunState::Paused;
         } else {
-            self.runstate = player_input(self, ctx);
+            self.run_state = player_input(self, ctx);
         }
 
         draw_map(&self.ecs, ctx);
@@ -62,7 +62,7 @@ fn main() -> rltk::BError {
         .build()?;
     let mut gs = State {
         ecs: World::new(),
-        runstate: RunState::Running,
+        run_state: RunState::Running,
     };
 
     gs.ecs.register::<Position>();
