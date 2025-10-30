@@ -7,16 +7,17 @@ impl<'a> System<'a> for ItemCollectionSystem {
     type SystemData = (
         ReadExpect<'a, Entity>,
         WriteExpect<'a, GameLog>,
-        ReadStorage<'a, WantsToPickupItem>,
+        WriteStorage<'a, WantsToPickupItem>,
         WriteStorage<'a, Position>,
         ReadStorage<'a, Name>,
         WriteStorage<'a, InBackpack>,
+        Entities<'a>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (player_entity, mut gamelog, wants_pickup, mut positions, names, mut backpack) = data;
+        let (player_entity, mut gamelog, mut wants_pickup, mut positions, names, mut backpack, entities) = data;
 
-        for pickup in wants_pickup.join() {
+        for (entity, pickup) in (&entities, &wants_pickup).join() {
             positions.remove(pickup.item);
             backpack
                 .insert(
@@ -34,5 +35,7 @@ impl<'a> System<'a> for ItemCollectionSystem {
                 ));
             }
         }
+
+        wants_pickup.clear();
     }
 }
