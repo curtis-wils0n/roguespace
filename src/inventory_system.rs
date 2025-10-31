@@ -1,6 +1,6 @@
 use super::{
-    CombatStats, InBackpack, Name, Position, Potion, WantsToDrinkPotion, WantsToDropItem,
-    WantsToPickupItem, gamelog::GameLog,
+    CombatStats, Consumable, InBackpack, InflictsDamage, Map, Name, Position, ProvidesHealing,
+    SufferDamage, WantsToDropItem, WantsToPickupItem, WantsToUseItem, gamelog::GameLog,
 };
 use specs::prelude::*;
 
@@ -20,7 +20,7 @@ impl<'a> System<'a> for ItemCollectionSystem {
     fn run(&mut self, data: Self::SystemData) {
         let (
             player_entity,
-            mut gamelog,
+            mut game_log,
             mut wants_pickup,
             mut positions,
             names,
@@ -40,7 +40,7 @@ impl<'a> System<'a> for ItemCollectionSystem {
                 .expect("Unable to insert backpack entry");
 
             if pickup.collected_by == *player_entity {
-                gamelog.entries.push(format!(
+                game_log.entries.push(format!(
                     "You pick up the {}.",
                     names.get(pickup.item).unwrap().name
                 ));
@@ -51,48 +51,94 @@ impl<'a> System<'a> for ItemCollectionSystem {
     }
 }
 
-pub struct PotionUseSystem {}
-impl<'a> System<'a> for PotionUseSystem {
+pub struct ItemUseSystem {}
+impl<'a> System<'a> for ItemUseSystem {
     #[allow(clippy::type_complexity)]
     type SystemData = (
         ReadExpect<'a, Entity>,
         WriteExpect<'a, GameLog>,
+        ReadExpect<'a, Map>,
         Entities<'a>,
-        WriteStorage<'a, WantsToDrinkPotion>,
+        WriteStorage<'a, WantsToUseItem>,
         ReadStorage<'a, Name>,
-        ReadStorage<'a, Potion>,
+        ReadStorage<'a, Consumable>,
+        ReadStorage<'a, ProvidesHealing>,
         WriteStorage<'a, CombatStats>,
+        ReadStorage<'a, InflictsDamage>,
+        WriteStorage<'a, SufferDamage>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
         let (
             player_entity,
-            mut gamelog,
+            mut game_log,
+            map,
             entities,
-            mut wants_drink,
+            mut wants_use,
             names,
-            potions,
+            consumables,
+            healing,
             mut combat_stats,
+            inflict_damage,
+            mut suffer_damage,
         ) = data;
 
-        for (entity, drink, stats) in (&entities, &wants_drink, &mut combat_stats).join() {
-            let potion = potions.get(drink.potion);
-            match potion {
+        for (entity, use_item, stats) in (&entities, &wants_use, &mut combat_stats).join() {
+            let mut used_item = true;
+            let consumable = consumables.get(use_item.item);
+            match consumable {
                 None => {}
-                Some(potion) => {
-                    stats.hp = i32::min(stats.max_hp, stats.hp + potion.heal_amount);
+                Some(_) => {
+                    entities
+                        .delete(use_item.item)
+                        .expect("Unable to delete item");
+                }
+            }
+            let item_heals = healing.get(use_item.item);
+            match item_heals {
+                None => {}
+                Some(healer) => {
+                    stats.hp = i32::min(stats.max_hp, stats.hp + healer.heal_amount);
                     if entity == *player_entity {
-                        gamelog.entries.push(format!(
+                        game_log.entries.push(format!(
                             "You drink the {}, healing {} hp.",
-                            names.get(drink.potion).unwrap().name,
-                            potion.heal_amount
+                            names.get(use_item.item).unwrap().name,
+                            healer.heal_amount
                         ));
                     }
-                    entities.delete(drink.potion).expect("Delete failed");
+                }
+            }
+            let item_damages = inflict_damage.get(use_item.item);
+            match item_damages {
+                None => {}
+                Some(damage) => {
+                    let target_point = use_item.target.unwrap();
+                    let idx = map.xy_idx(target_point.x, target_point.y);
+                    used_item = false;
+                    for mob in map.tile_content[idx].iter() {
+                        SufferDamage::new_damage(&mut suffer_damage, *mob, damage.damage);
+                        if entity == *player_entity {
+                            let mob_name = names.get(*mob).unwrap();
+                            let item_name = names.get(use_item.item).unwrap();
+                            game_log.entries.push(format!(
+                                "You use {} on {}, inflicting {} damage.",
+                                item_name.name, mob_name.name, damage.damage
+                            ));
+                        }
+                    }
+                }
+            }
+            if used_item {
+                let consumable = consumables.get(use_item.item);
+                match consumable {
+                    None => {}
+                    Some(_) => {
+                        entities.delete(use_item.item).expect("Delete failed");
+                    }
                 }
             }
         }
-        wants_drink.clear();
+        wants_use.clear();
     }
 }
 
@@ -112,7 +158,7 @@ impl<'a> System<'a> for ItemDropSystem {
     fn run(&mut self, data: Self::SystemData) {
         let (
             player_entity,
-            mut gamelog,
+            mut game_log,
             entities,
             mut wants_drop,
             names,
@@ -138,7 +184,7 @@ impl<'a> System<'a> for ItemDropSystem {
             backpack.remove(to_drop.item);
 
             if entity == *player_entity {
-                gamelog.entries.push(format!(
+                game_log.entries.push(format!(
                     "You drop the {}.",
                     names.get(to_drop.item).unwrap().name
                 ));

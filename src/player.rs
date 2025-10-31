@@ -82,7 +82,7 @@ fn get_item(ecs: &mut World) {
     let entities = ecs.entities();
     let items = ecs.read_storage::<Item>();
     let positions = ecs.read_storage::<Position>();
-    let mut gamelog = ecs.fetch_mut::<GameLog>();
+    let mut game_log = ecs.fetch_mut::<GameLog>();
 
     let mut target_item: Option<Entity> = None;
     for (item_entity, _item, position) in (&entities, &items, &positions).join() {
@@ -91,7 +91,7 @@ fn get_item(ecs: &mut World) {
         }
     }
     match target_item {
-        None => gamelog
+        None => game_log
             .entries
             .push("There is nothing here to pick up.".to_string()),
         Some(item) => {
