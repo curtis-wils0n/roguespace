@@ -1,7 +1,8 @@
+extern crate serde;
 use rltk::{GameState, Point, Rltk};
 use specs::prelude::*;
-mod visibility_system;
-use visibility_system::VisibilitySystem;
+use specs::saveload::{SimpleMarker, SimpleMarkerAllocator};
+
 mod components;
 pub use components::*;
 mod map;
@@ -10,20 +11,40 @@ mod player;
 use player::*;
 mod rect;
 pub use rect::Rect;
+mod visibility_system;
+use visibility_system::VisibilitySystem;
 mod monster_ai_system;
 use monster_ai_system::MonsterAI;
-mod damage_system;
-use damage_system::DamageSystem;
 mod map_indexing_system;
 use map_indexing_system::MapIndexingSystem;
+mod damage_system;
+use damage_system::DamageSystem;
 mod melee_combat_system;
 use melee_combat_system::MeleeCombatSystem;
-mod inventory_system;
-use inventory_system::{ItemCollectionSystem, ItemDropSystem, ItemUseSystem};
-
 mod gamelog;
 mod gui;
+mod inventory_system;
 mod spawner;
+use inventory_system::{ItemCollectionSystem, ItemDropSystem, ItemUseSystem};
+pub mod saveload_system;
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState {
+    AwaitingInput,
+    MainMenu {
+        menu_selection: gui::MainMenuSelection,
+    },
+    PreRun,
+    PlayerTurn,
+    MonsterTurn,
+    ShowInventory,
+    ShowTargeting {
+        range: i32,
+        item: Entity,
+    },
+    ShowDropItem,
+    SaveGame,
+}
 
 pub struct State {
     pub ecs: World,
@@ -47,37 +68,43 @@ impl State {
         potions.run_now(&self.ecs);
         let mut drop_items = ItemDropSystem {};
         drop_items.run_now(&self.ecs);
+
         self.ecs.maintain();
     }
 }
 
 impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
-        ctx.cls();
-
-        draw_map(&self.ecs, ctx);
-
-        {
-            let positions = self.ecs.read_storage::<Position>();
-            let renderables = self.ecs.read_storage::<Renderable>();
-            let map = self.ecs.fetch::<Map>();
-
-            let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
-            data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order));
-            for (pos, render) in data.iter() {
-                let idx = map.xy_idx(pos.x, pos.y);
-                if map.visible_tiles[idx] {
-                    ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
-                }
-            }
-
-            gui::draw_ui(&self.ecs, ctx);
-        }
-
         let mut new_run_state;
         {
             let run_state = self.ecs.fetch::<RunState>();
             new_run_state = *run_state;
+        }
+
+        ctx.cls();
+
+        match new_run_state {
+            RunState::MainMenu { .. } => {}
+            _ => {
+                draw_map(&self.ecs, ctx);
+
+                {
+                    let positions = self.ecs.read_storage::<Position>();
+                    let renderables = self.ecs.read_storage::<Renderable>();
+                    let map = self.ecs.fetch::<Map>();
+
+                    let mut data = (&positions, &renderables).join().collect::<Vec<_>>();
+                    data.sort_by(|&a, &b| b.1.render_order.cmp(&a.1.render_order));
+                    for (pos, render) in data.iter() {
+                        let idx = map.xy_idx(pos.x, pos.y);
+                        if map.visible_tiles[idx] {
+                            ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
+                        }
+                    }
+
+                    gui::draw_ui(&self.ecs, ctx);
+                }
+            }
         }
 
         match new_run_state {
@@ -167,6 +194,29 @@ impl GameState for State {
                     }
                 }
             }
+            RunState::MainMenu { .. } => {
+                let result = gui::main_menu(self, ctx);
+                match result {
+                    gui::MainMenuResult::NoSelection { selected } => {
+                        new_run_state = RunState::MainMenu {
+                            menu_selection: selected,
+                        }
+                    }
+                    gui::MainMenuResult::Selected { selected } => match selected {
+                        gui::MainMenuSelection::NewGame => new_run_state = RunState::PreRun,
+                        gui::MainMenuSelection::LoadGame => new_run_state = RunState::PreRun,
+                        gui::MainMenuSelection::Quit => {
+                            std::process::exit(0);
+                        }
+                    },
+                }
+            }
+            RunState::SaveGame => {
+                saveload_system::save_game(&mut self.ecs);
+                new_run_state = RunState::MainMenu {
+                    menu_selection: gui::MainMenuSelection::LoadGame,
+                };
+            }
         }
         {
             let mut run_writer = self.ecs.write_resource::<RunState>();
@@ -196,7 +246,6 @@ fn main() -> rltk::BError {
     gs.ecs.register::<SufferDamage>();
     gs.ecs.register::<WantsToMelee>();
     gs.ecs.register::<Item>();
-    gs.ecs.register::<Potion>();
     gs.ecs.register::<InBackpack>();
     gs.ecs.register::<WantsToPickupItem>();
     gs.ecs.register::<WantsToUseItem>();
@@ -207,6 +256,10 @@ fn main() -> rltk::BError {
     gs.ecs.register::<InflictsDamage>();
     gs.ecs.register::<AreaOfEffect>();
     gs.ecs.register::<Confusion>();
+    gs.ecs.register::<SimpleMarker<SerializeMe>>();
+    gs.ecs.register::<SerializationHelper>();
+
+    gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 
     let map: Map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
