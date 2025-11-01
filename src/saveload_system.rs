@@ -1,8 +1,12 @@
 use super::components::*;
 use specs::error::NoError;
 use specs::prelude::*;
-use specs::saveload::{MarkedBuilder, SerializeComponents, SimpleMarker};
+use specs::saveload::{
+    DeserializeComponents, MarkedBuilder, SerializeComponents, SimpleMarker, SimpleMarkerAllocator,
+};
+use std::fs;
 use std::fs::File;
+use std::path::Path;
 
 macro_rules! serialize_individually {
     ($ecs:expr, $ser:expr, $data:expr, $( $type:ty),*) => {
@@ -18,7 +22,7 @@ macro_rules! serialize_individually {
     };
 }
 
-pub fn save_game(ecs: &mut World) {
+pub fn savegame(ecs: &mut World) {
     let map_copy = ecs.get_mut::<super::map::Map>().unwrap().clone();
     let save_helper = ecs
         .create_entity()
@@ -30,7 +34,7 @@ pub fn save_game(ecs: &mut World) {
             ecs.entities(),
             ecs.read_storage::<SimpleMarker<SerializeMe>>(),
         );
-        let writer = File::create("./save_game.json").unwrap();
+        let writer = File::create("./savegame.json").unwrap();
         let mut serializer = serde_json::Serializer::new(writer);
         serialize_individually!(
             ecs,
@@ -61,4 +65,103 @@ pub fn save_game(ecs: &mut World) {
         );
     }
     ecs.delete_entity(save_helper).expect("Crash on cleanup");
+}
+
+pub fn does_save_exist() -> bool {
+    Path::new("./savegame.json").exists()
+}
+
+macro_rules! deserialize_individually {
+    ($ecs:expr, $de:expr, $data:expr, $($type:ty),*) => {
+        $(
+        DeserializeComponents::<NoError, _>::deserialize(
+            &mut ( &mut $ecs.write_storage::<$type>(), ),
+            &mut $data.0,
+            &mut $data.1,
+            &mut $data.2,
+            &mut $de,
+        )
+        .unwrap();
+        )*
+    };
+}
+
+pub fn load_game(ecs: &mut World) {
+    {
+        // Delete everything
+        let mut to_delete = Vec::new();
+        for e in ecs.entities().join() {
+            to_delete.push(e);
+        }
+        for del in to_delete.iter() {
+            ecs.delete_entity(*del).expect("Deletion failed");
+        }
+    }
+
+    let data = fs::read_to_string("./savegame.json").unwrap();
+    let mut de = serde_json::Deserializer::from_str(&data);
+
+    {
+        let mut d = (
+            &mut ecs.entities(),
+            &mut ecs.write_storage::<SimpleMarker<SerializeMe>>(),
+            &mut ecs.write_resource::<SimpleMarkerAllocator<SerializeMe>>(),
+        );
+
+        deserialize_individually!(
+            ecs,
+            de,
+            d,
+            Position,
+            Renderable,
+            Player,
+            Viewshed,
+            Monster,
+            Name,
+            BlocksTile,
+            CombatStats,
+            SufferDamage,
+            WantsToMelee,
+            Item,
+            Consumable,
+            Ranged,
+            InflictsDamage,
+            AreaOfEffect,
+            Confusion,
+            ProvidesHealing,
+            InBackpack,
+            WantsToPickupItem,
+            WantsToUseItem,
+            WantsToDropItem,
+            SerializationHelper
+        );
+    }
+
+    let mut delete_me: Option<Entity> = None;
+    {
+        let entities = ecs.entities();
+        let helper = ecs.read_storage::<SerializationHelper>();
+        let player = ecs.read_storage::<Player>();
+        let position = ecs.read_storage::<Position>();
+        for (e, h) in (&entities, &helper).join() {
+            let mut world_map = ecs.write_resource::<super::map::Map>();
+            *world_map = h.map.clone();
+            world_map.tile_content = vec![Vec::new(); super::map::MAP_COUNT];
+            delete_me = Some(e);
+        }
+        for (e, _p, pos) in (&entities, &player, &position).join() {
+            let mut ppos = ecs.write_resource::<rltk::Point>();
+            *ppos = rltk::Point::new(pos.x, pos.y);
+            let mut player_resource = ecs.write_resource::<Entity>();
+            *player_resource = e;
+        }
+    }
+    ecs.delete_entity(delete_me.unwrap())
+        .expect("Unable to delete helper");
+}
+
+pub fn delete_save() {
+    if Path::new("./savegame.json").exists() {
+        fs::remove_file("./savegame.json").expect("Unable to delete savegame.json");
+    }
 }

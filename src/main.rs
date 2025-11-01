@@ -204,15 +204,19 @@ impl GameState for State {
                     }
                     gui::MainMenuResult::Selected { selected } => match selected {
                         gui::MainMenuSelection::NewGame => new_run_state = RunState::PreRun,
-                        gui::MainMenuSelection::LoadGame => new_run_state = RunState::PreRun,
+                        gui::MainMenuSelection::LoadGame => {
+                            saveload_system::load_game(&mut self.ecs);
+                            new_run_state = RunState::AwaitingInput;
+                            saveload_system::delete_save();
+                        }
                         gui::MainMenuSelection::Quit => {
-                            std::process::exit(0);
+                            ::std::process::exit(0);
                         }
                     },
                 }
             }
             RunState::SaveGame => {
-                saveload_system::save_game(&mut self.ecs);
+                saveload_system::savegame(&mut self.ecs);
                 new_run_state = RunState::MainMenu {
                     menu_selection: gui::MainMenuSelection::LoadGame,
                 };
@@ -272,7 +276,9 @@ fn main() -> rltk::BError {
     }
 
     gs.ecs.insert(map);
-    gs.ecs.insert(RunState::PreRun);
+    gs.ecs.insert(RunState::MainMenu {
+        menu_selection: gui::MainMenuSelection::NewGame,
+    });
     gs.ecs.insert(Point::new(player_x, player_y));
     gs.ecs.insert(gamelog::GameLog {
         entries: vec!["Welcome to RogueSpace".to_string()],
