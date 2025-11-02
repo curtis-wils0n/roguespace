@@ -469,7 +469,7 @@ pub fn main_menu(gs: &mut State, ctx: &mut Rltk) -> MainMenuResult {
                 VirtualKeyCode::Escape => MainMenuResult::NoSelection {
                     selected: MainMenuSelection::Quit,
                 },
-                VirtualKeyCode::Up => {
+                VirtualKeyCode::Up | VirtualKeyCode::Numpad8 | VirtualKeyCode::K => {
                     let mut new_selection;
                     match selection {
                         MainMenuSelection::NewGame => new_selection = MainMenuSelection::Quit,
@@ -483,7 +483,7 @@ pub fn main_menu(gs: &mut State, ctx: &mut Rltk) -> MainMenuResult {
                         selected: new_selection,
                     }
                 }
-                VirtualKeyCode::Down => {
+                VirtualKeyCode::Down | VirtualKeyCode::Numpad2 | VirtualKeyCode::J => {
                     let mut new_selection;
                     match selection {
                         MainMenuSelection::NewGame => new_selection = MainMenuSelection::LoadGame,
