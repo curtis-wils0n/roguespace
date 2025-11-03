@@ -1,5 +1,5 @@
 extern crate serde;
-use rltk::{BTerm, BTermBuilder, GameState, Point, Rltk};
+use rltk::{BTerm, BTermBuilder, GameState, Point, Rltk, RGB};
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, SimpleMarkerAllocator};
 
@@ -162,7 +162,12 @@ impl GameState for State {
             new_run_state = *run_state;
         }
 
-        ctx.cls();
+        // Clear screen with glyph 0 (blank tile) instead of default space character
+        for y in 0..50 {
+            for x in 0..80 {
+                ctx.set(x, y, RGB::from_f32(0., 0., 0.), RGB::from_f32(0., 0., 0.), 0);
+            }
+        }
 
         match new_run_state {
             RunState::MainMenu { .. } => {}
