@@ -214,15 +214,15 @@ pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
             let mut fg;
             match tile {
                 TileType::Floor => {
-                    glyph = rltk::to_cp437('.');
+                    glyph = 2;
                     fg = RGB::from_f32(0.0, 0.5, 0.5);
                 }
                 TileType::Wall => {
-                    glyph = rltk::to_cp437('#');
+                    glyph = 843;
                     fg = RGB::from_f32(0., 1.0, 0.);
                 }
                 TileType::DownStairs => {
-                    glyph = rltk::to_cp437('>');
+                    glyph = 297;
                     fg = RGB::from_f32(0.0, 1.0, 1.0);
                 }
             }

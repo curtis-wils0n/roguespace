@@ -17,7 +17,7 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
             y: player_y,
         })
         .with(Renderable {
-            glyph: rltk::to_cp437('@'),
+            glyph: 27,
             fg: RGB::named(rltk::YELLOW),
             bg: RGB::named(rltk::BLACK),
             render_order: 0,
@@ -54,10 +54,10 @@ pub fn random_monster(ecs: &mut World, x: i32, y: i32) {
 }
 
 fn orc(ecs: &mut World, x: i32, y: i32) {
-    monster(ecs, x, y, rltk::to_cp437('o'), "Orc");
+    monster(ecs, x, y, 127, "Orc");
 }
 fn goblin(ecs: &mut World, x: i32, y: i32) {
-    monster(ecs, x, y, rltk::to_cp437('g'), "Goblin");
+    monster(ecs, x, y, 123, "Goblin");
 }
 
 fn monster<S: ToString>(ecs: &mut World, x: i32, y: i32, glyph: rltk::FontCharType, name: S) {
@@ -157,7 +157,7 @@ fn health_potion(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
         .with(Position { x, y })
         .with(Renderable {
-            glyph: rltk::to_cp437('¡'),
+            glyph: 669,
             fg: RGB::named(rltk::MAGENTA),
             bg: RGB::named(rltk::BLACK),
             render_order: 2,
@@ -176,7 +176,7 @@ fn magic_missile_scroll(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
         .with(Position { x, y })
         .with(Renderable {
-            glyph: rltk::to_cp437(')'),
+            glyph: 768,
             fg: RGB::named(rltk::CYAN),
             bg: RGB::named(rltk::BLACK),
             render_order: 2,
@@ -196,7 +196,7 @@ fn fireball_scroll(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
         .with(Position { x, y })
         .with(Renderable {
-            glyph: rltk::to_cp437(')'),
+            glyph: 768,
             fg: RGB::named(rltk::ORANGE),
             bg: RGB::named(rltk::BLACK),
             render_order: 2,
@@ -217,7 +217,7 @@ fn confusion_scroll(ecs: &mut World, x: i32, y: i32) {
     ecs.create_entity()
         .with(Position { x, y })
         .with(Renderable {
-            glyph: rltk::to_cp437(')'),
+            glyph: 768,
             fg: RGB::named(rltk::PINK),
             bg: RGB::named(rltk::BLACK),
             render_order: 2,

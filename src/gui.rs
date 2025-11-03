@@ -2,7 +2,7 @@ use super::{
     CombatStats, InBackpack, Map, Name, Player, Position, RunState, State, Viewshed,
     gamelog::GameLog,
 };
-use rltk::{Point, RGB, Rltk, VirtualKeyCode};
+use rltk::{BTerm, Point, RGB, Rltk, VirtualKeyCode};
 use specs::prelude::*;
 
 pub fn draw_ui(ecs: &World, ctx: &mut Rltk) {
@@ -172,6 +172,23 @@ pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
     let count = inventory.count();
 
     let mut y = (25 - (count / 2)) as i32;
+
+    BTerm::set_active_console(ctx, 0);
+    let box_width = 31;
+    let box_height = (count + 3) as i32;
+    for dy in 0..=box_height {
+        for dx in 0..=box_width {
+            ctx.set(
+                15 + dx,
+                y - 2 + dy,
+                RGB::named(rltk::BLACK),
+                RGB::named(rltk::BLACK),
+                0,
+            );
+        }
+    }
+
+    BTerm::set_active_console(ctx, 2);
     ctx.draw_box(
         15,
         y - 2,
@@ -258,6 +275,23 @@ pub fn drop_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
     let count = inventory.count();
 
     let mut y = (25 - (count / 2)) as i32;
+
+    BTerm::set_active_console(ctx, 0);
+    let box_width = 31;
+    let box_height = (count + 3) as i32;
+    for dy in 0..=box_height {
+        for dx in 0..=box_width {
+            ctx.set(
+                15 + dx,
+                y - 2 + dy,
+                RGB::named(rltk::BLACK),
+                RGB::named(rltk::BLACK),
+                0,
+            );
+        }
+    }
+
+    BTerm::set_active_console(ctx, 2);
     ctx.draw_box(
         15,
         y - 2,
@@ -342,6 +376,7 @@ pub fn ranged_target(
     let player_pos = gs.ecs.fetch::<Point>();
     let viewsheds = gs.ecs.read_storage::<Viewshed>();
 
+    BTerm::set_active_console(ctx, 2);
     ctx.print_color(
         5,
         0,
@@ -350,6 +385,7 @@ pub fn ranged_target(
         "Select Target:",
     );
 
+    BTerm::set_active_console(ctx, 0);
     let mut available_cells = Vec::new();
     let visible = viewsheds.get(*player_entity);
     if let Some(visible) = visible {
