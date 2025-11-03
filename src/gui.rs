@@ -161,16 +161,28 @@ pub enum ItemMenuResult {
 }
 
 pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    use std::collections::HashMap;
+
     let player_entity = gs.ecs.fetch::<Entity>();
     let names = gs.ecs.read_storage::<Name>();
     let backpack = gs.ecs.read_storage::<InBackpack>();
     let entities = gs.ecs.entities();
 
-    let inventory = (&backpack, &names)
+    let mut item_groups: HashMap<String, Vec<Entity>> = HashMap::new();
+    for (entity, _pack, name) in (&entities, &backpack, &names)
         .join()
-        .filter(|item| item.0.owner == *player_entity);
-    let count = inventory.count();
+        .filter(|item| item.1.owner == *player_entity)
+    {
+        item_groups
+            .entry(name.name.clone())
+            .or_insert_with(Vec::new)
+            .push(entity);
+    }
 
+    let mut unique_items: Vec<(String, Vec<Entity>)> = item_groups.into_iter().collect();
+    unique_items.sort_by(|a, b| a.0.cmp(&b.0));
+
+    let count = unique_items.len();
     let mut y = (25 - (count / 2)) as i32;
 
     BTerm::set_active_console(ctx, 0);
@@ -213,11 +225,7 @@ pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
     );
 
     let mut equippable: Vec<Entity> = Vec::new();
-    for (j, (entity, _pack, name)) in (0_i32..).zip(
-        (&entities, &backpack, &names)
-            .join()
-            .filter(|item| item.1.owner == *player_entity),
-    ) {
+    for (j, (item_name, item_entities)) in unique_items.iter().enumerate() {
         ctx.set(
             17,
             y,
@@ -240,8 +248,14 @@ pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
             rltk::to_cp437(')'),
         );
 
-        ctx.print(21, y, name.name.to_string());
-        equippable.push(entity);
+        let display_name = if item_entities.len() > 1 {
+            format!("{}x {}", item_entities.len(), item_name)
+        } else {
+            item_name.clone()
+        };
+
+        ctx.print(21, y, display_name);
+        equippable.push(item_entities[0]); // Use first entity from group
         y += 1;
     }
     match ctx.key {
@@ -264,16 +278,28 @@ pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
 }
 
 pub fn drop_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option<Entity>) {
+    use std::collections::HashMap;
+
     let player_entity = gs.ecs.fetch::<Entity>();
     let names = gs.ecs.read_storage::<Name>();
     let backpack = gs.ecs.read_storage::<InBackpack>();
     let entities = gs.ecs.entities();
 
-    let inventory = (&backpack, &names)
+    let mut item_groups: HashMap<String, Vec<Entity>> = HashMap::new();
+    for (entity, _pack, name) in (&entities, &backpack, &names)
         .join()
-        .filter(|item| item.0.owner == *player_entity);
-    let count = inventory.count();
+        .filter(|item| item.1.owner == *player_entity)
+    {
+        item_groups
+            .entry(name.name.clone())
+            .or_insert_with(Vec::new)
+            .push(entity);
+    }
 
+    let mut unique_items: Vec<(String, Vec<Entity>)> = item_groups.into_iter().collect();
+    unique_items.sort_by(|a, b| a.0.cmp(&b.0));
+
+    let count = unique_items.len();
     let mut y = (25 - (count / 2)) as i32;
 
     BTerm::set_active_console(ctx, 0);
@@ -316,11 +342,7 @@ pub fn drop_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
     );
 
     let mut equippable: Vec<Entity> = Vec::new();
-    let mut j = 0;
-    for (entity, _pack, name) in (&entities, &backpack, &names)
-        .join()
-        .filter(|item| item.1.owner == *player_entity)
-    {
+    for (j, (item_name, item_entities)) in unique_items.iter().enumerate() {
         ctx.set(
             17,
             y,
@@ -343,10 +365,15 @@ pub fn drop_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
             rltk::to_cp437(')'),
         );
 
-        ctx.print(21, y, &name.name.to_string());
-        equippable.push(entity);
+        let display_name = if item_entities.len() > 1 {
+            format!("{}x {}", item_entities.len(), item_name)
+        } else {
+            item_name.clone()
+        };
+
+        ctx.print(21, y, &display_name);
+        equippable.push(item_entities[0]);
         y += 1;
-        j += 1;
     }
 
     match ctx.key {
