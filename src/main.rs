@@ -1,5 +1,5 @@
 extern crate serde;
-use rltk::{GameState, Point, Rltk};
+use rltk::{BTerm, BTermBuilder, GameState, Point, Rltk};
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, SimpleMarkerAllocator};
 
@@ -192,6 +192,7 @@ impl GameState for State {
             RunState::PreRun => {
                 self.run_systems();
                 self.ecs.maintain();
+                BTerm::set_active_console(ctx, 0);
                 new_run_state = RunState::AwaitingInput;
             }
             RunState::AwaitingInput => {
@@ -208,6 +209,7 @@ impl GameState for State {
                 new_run_state = RunState::AwaitingInput;
             }
             RunState::ShowInventory => {
+                BTerm::set_active_console(ctx, 2);
                 let result = gui::show_inventory(self, ctx);
                 match result.0 {
                     gui::ItemMenuResult::Cancel => new_run_state = RunState::AwaitingInput,
@@ -276,6 +278,7 @@ impl GameState for State {
                 }
             }
             RunState::MainMenu { .. } => {
+                BTerm::set_active_console(ctx, 2);
                 let result = gui::main_menu(self, ctx);
                 match result {
                     gui::MainMenuResult::NoSelection { selected } => {
@@ -318,10 +321,23 @@ impl GameState for State {
 
 fn main() -> rltk::BError {
     use rltk::RltkBuilder;
-    let mut context = RltkBuilder::simple(80, 50)?
-        .with_title("Roguelike Tutorial")
+    let mut context = BTermBuilder::new()
+        .with_title("RogueSpace")
+        .with_fps_cap(30.0)
+        .with_dimensions(80, 50)
+        .with_tile_dimensions(16, 16)
+        .with_resource_path("resources/")
+        .with_font("monochrome-transparent_packed.png", 16, 16)
+        .with_font("terminal8x8.jpg", 8, 8)
+        .with_simple_console(80, 50, "monochrome-transparent_packed.png")
+        .with_simple_console_no_bg(80, 50, "monochrome-transparent_packed.png")
+        .with_simple_console_no_bg(80, 50, "terminal8x8.jpg")
         .build()?;
     context.with_post_scanlines(true);
+
+    // let mut context = RltkBuilder::simple(80, 50)?
+    //     .with_title("Roguelike Tutorial")
+    //     .build()?;
     let mut gs = State { ecs: World::new() };
 
     gs.ecs.register::<Position>();
