@@ -1,5 +1,5 @@
 extern crate serde;
-use rltk::{BTerm, BTermBuilder, GameState, Point, Rltk, RGB};
+use rltk::{BTerm, BTermBuilder, GameState, Point, RGB, Rltk};
 use specs::prelude::*;
 use specs::saveload::{SimpleMarker, SimpleMarkerAllocator};
 
@@ -166,10 +166,16 @@ impl GameState for State {
         BTerm::set_active_console(ctx, 0);
         for y in 0..50 {
             for x in 0..80 {
-                ctx.set(x, y, RGB::from_f32(0., 0., 0.), RGB::from_f32(0., 0., 0.), 0);
+                ctx.set(
+                    x,
+                    y,
+                    RGB::from_f32(0., 0., 0.),
+                    RGB::from_f32(0., 0., 0.),
+                    0,
+                );
             }
         }
-        
+
         // Clear console 2 (terminal font for UI)
         BTerm::set_active_console(ctx, 2);
         ctx.cls();
@@ -195,7 +201,7 @@ impl GameState for State {
                         }
                     }
                 }
-                
+
                 // Render UI on console 2 (terminal font)
                 BTerm::set_active_console(ctx, 2);
                 gui::draw_ui(&self.ecs, ctx);
@@ -334,7 +340,6 @@ impl GameState for State {
 }
 
 fn main() -> rltk::BError {
-    use rltk::RltkBuilder;
     let mut context = BTermBuilder::new()
         .with_title("RogueSpace")
         .with_fps_cap(30.0)
@@ -349,9 +354,6 @@ fn main() -> rltk::BError {
         .build()?;
     context.with_post_scanlines(true);
 
-    // let mut context = RltkBuilder::simple(80, 50)?
-    //     .with_title("Roguelike Tutorial")
-    //     .build()?;
     let mut gs = State { ecs: World::new() };
 
     gs.ecs.register::<Position>();
