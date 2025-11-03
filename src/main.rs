@@ -314,7 +314,7 @@ impl GameState for State {
                             saveload_system::delete_save();
                         }
                         gui::MainMenuSelection::Quit => {
-                            ::std::process::exit(0);
+                            std::process::exit(0);
                         }
                     },
                 }

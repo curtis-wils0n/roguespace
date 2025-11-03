@@ -380,6 +380,8 @@ pub fn ranged_target(
     let player_pos = gs.ecs.fetch::<Point>();
     let viewsheds = gs.ecs.read_storage::<Viewshed>();
 
+    // Render text on console 2 (terminal font)
+    BTerm::set_active_console(ctx, 2);
     ctx.print_color(
         5,
         0,
@@ -388,6 +390,8 @@ pub fn ranged_target(
         "Select Target:",
     );
 
+    // Render background colors on console 0 (supports backgrounds)
+    BTerm::set_active_console(ctx, 0);
     let mut available_cells = Vec::new();
     let visible = viewsheds.get(*player_entity);
     if let Some(visible) = visible {
