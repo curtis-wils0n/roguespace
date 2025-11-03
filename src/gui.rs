@@ -173,7 +173,6 @@ pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
 
     let mut y = (25 - (count / 2)) as i32;
 
-    // Fill background on console 0 (which supports backgrounds) for opaque menu
     BTerm::set_active_console(ctx, 0);
     let box_width = 31;
     let box_height = (count + 3) as i32;
@@ -189,7 +188,6 @@ pub fn show_inventory(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
         }
     }
 
-    // Switch back to console 2 for text rendering
     BTerm::set_active_console(ctx, 2);
     ctx.draw_box(
         15,
@@ -278,7 +276,6 @@ pub fn drop_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
 
     let mut y = (25 - (count / 2)) as i32;
 
-    // Fill background on console 0 (which supports backgrounds) for opaque menu
     BTerm::set_active_console(ctx, 0);
     let box_width = 31;
     let box_height = (count + 3) as i32;
@@ -294,7 +291,6 @@ pub fn drop_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Option
         }
     }
 
-    // Switch back to console 2 for text rendering
     BTerm::set_active_console(ctx, 2);
     ctx.draw_box(
         15,
@@ -380,7 +376,6 @@ pub fn ranged_target(
     let player_pos = gs.ecs.fetch::<Point>();
     let viewsheds = gs.ecs.read_storage::<Viewshed>();
 
-    // Render text on console 2 (terminal font)
     BTerm::set_active_console(ctx, 2);
     ctx.print_color(
         5,
@@ -390,7 +385,6 @@ pub fn ranged_target(
         "Select Target:",
     );
 
-    // Render background colors on console 0 (supports backgrounds)
     BTerm::set_active_console(ctx, 0);
     let mut available_cells = Vec::new();
     let visible = viewsheds.get(*player_entity);
