@@ -106,7 +106,7 @@ fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
                         y,
                         RGB::named(rltk::WHITE),
                         RGB::named(rltk::GREY),
-                        0,
+                        " ".to_string(),
                     );
                 }
                 y += 1;
@@ -137,7 +137,7 @@ fn draw_tooltips(ecs: &World, ctx: &mut Rltk) {
                         y,
                         RGB::named(rltk::WHITE),
                         RGB::named(rltk::GREY),
-                        0,
+                        " ".to_string(),
                     );
                 }
                 y += 1;
