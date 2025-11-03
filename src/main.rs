@@ -162,16 +162,23 @@ impl GameState for State {
             new_run_state = *run_state;
         }
 
-        // Clear screen with glyph 0 (blank tile) instead of default space character
+        // Clear console 0 (sprite font) with glyph 0 (blank tile)
+        BTerm::set_active_console(ctx, 0);
         for y in 0..50 {
             for x in 0..80 {
                 ctx.set(x, y, RGB::from_f32(0., 0., 0.), RGB::from_f32(0., 0., 0.), 0);
             }
         }
+        
+        // Clear console 2 (terminal font for UI)
+        BTerm::set_active_console(ctx, 2);
+        ctx.cls();
 
         match new_run_state {
             RunState::MainMenu { .. } => {}
             _ => {
+                // Render map and entities on console 0 (sprite font)
+                BTerm::set_active_console(ctx, 0);
                 draw_map(&self.ecs, ctx);
 
                 {
@@ -187,9 +194,11 @@ impl GameState for State {
                             ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
                         }
                     }
-
-                    gui::draw_ui(&self.ecs, ctx);
                 }
+                
+                // Render UI on console 2 (terminal font)
+                BTerm::set_active_console(ctx, 2);
+                gui::draw_ui(&self.ecs, ctx);
             }
         }
 
