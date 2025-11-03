@@ -61,7 +61,9 @@ pub fn savegame(ecs: &mut World) {
             WantsToPickupItem,
             WantsToUseItem,
             WantsToDropItem,
-            SerializationHelper
+            SerializationHelper,
+            Equippable,
+            Equipped
         );
     }
     ecs.delete_entity(save_helper).expect("Crash on cleanup");
@@ -133,7 +135,9 @@ pub fn load_game(ecs: &mut World) {
             WantsToPickupItem,
             WantsToUseItem,
             WantsToDropItem,
-            SerializationHelper
+            SerializationHelper,
+            Equippable,
+            Equipped
         );
     }
 
