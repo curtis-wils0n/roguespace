@@ -214,7 +214,7 @@ pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
             let mut fg;
             match tile {
                 TileType::Floor => {
-                    glyph = 0;
+                    glyph = 2;
                     fg = RGB::from_f32(0.0, 0.5, 0.5);
                 }
                 TileType::Wall => {
