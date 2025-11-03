@@ -104,65 +104,84 @@ fn health_potion(ecs: &mut World, x: i32, y: i32) {
         .build();
 }
 
-fn magic_missile_scroll(ecs: &mut World, x: i32, y: i32) {
-    ecs.create_entity()
+fn scroll<S: ToString>(
+    ecs: &mut World,
+    x: i32,
+    y: i32,
+    name: S,
+    fg: RGB,
+    damage: Option<i32>,
+    aoe_radius: Option<i32>,
+    confusion_turns: Option<i32>,
+) {
+    let mut entity_builder = ecs
+        .create_entity()
         .with(Position { x, y })
         .with(Renderable {
             glyph: 768,
-            fg: RGB::named(rltk::CYAN),
+            fg,
             bg: RGB::named(rltk::BLACK),
             render_order: 2,
         })
         .with(Name {
-            name: "Magic Missile Scroll".to_string(),
+            name: name.to_string(),
         })
         .with(Item {})
         .with(Consumable {})
-        .with(Ranged { range: 6 })
-        .with(InflictsDamage { damage: 8 })
-        .marked::<SimpleMarker<SerializeMe>>()
-        .build();
+        .with(Ranged { range: 6 });
+
+    if let Some(dmg) = damage {
+        entity_builder = entity_builder.with(InflictsDamage { damage: dmg });
+    }
+
+    if let Some(radius) = aoe_radius {
+        entity_builder = entity_builder.with(AreaOfEffect { radius });
+    }
+
+    if let Some(turns) = confusion_turns {
+        entity_builder = entity_builder.with(Confusion { turns });
+    }
+
+    entity_builder.marked::<SimpleMarker<SerializeMe>>().build();
+}
+
+fn magic_missile_scroll(ecs: &mut World, x: i32, y: i32) {
+    scroll(
+        ecs,
+        x,
+        y,
+        "Magic Missile Scroll",
+        RGB::named(rltk::CYAN),
+        Some(8),
+        None,
+        None,
+    );
 }
 
 fn fireball_scroll(ecs: &mut World, x: i32, y: i32) {
-    ecs.create_entity()
-        .with(Position { x, y })
-        .with(Renderable {
-            glyph: 768,
-            fg: RGB::named(rltk::ORANGE),
-            bg: RGB::named(rltk::BLACK),
-            render_order: 2,
-        })
-        .with(Name {
-            name: "Fireball Scroll".to_string(),
-        })
-        .with(Item {})
-        .with(Consumable {})
-        .with(Ranged { range: 6 })
-        .with(InflictsDamage { damage: 20 })
-        .with(AreaOfEffect { radius: 3 })
-        .marked::<SimpleMarker<SerializeMe>>()
-        .build();
+    scroll(
+        ecs,
+        x,
+        y,
+        "Fireball Scroll",
+        RGB::named(rltk::ORANGE),
+        Some(20),
+        Some(3),
+        None,
+    );
 }
 
 fn confusion_scroll(ecs: &mut World, x: i32, y: i32) {
-    ecs.create_entity()
-        .with(Position { x, y })
-        .with(Renderable {
-            glyph: 768,
-            fg: RGB::named(rltk::PINK),
-            bg: RGB::named(rltk::BLACK),
-            render_order: 2,
-        })
-        .with(Name {
-            name: "Confusion Scroll".to_string(),
-        })
-        .with(Item {})
-        .with(Consumable {})
-        .with(Ranged { range: 6 })
-        .with(Confusion { turns: 4 })
-        .marked::<SimpleMarker<SerializeMe>>()
-        .build();
+    scroll(
+        ecs,
+        x,
+        y,
+        "Confusion Scroll",
+        RGB::named(rltk::PINK),
+        None,
+        None,
+        Some(4),
+    );
 }
 
 fn room_table(map_depth: i32) -> RandomTable {
