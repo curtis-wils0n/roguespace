@@ -107,5 +107,5 @@ Copyright (c) 2024 Curtis Wilson
 
 ## Acknowledgments
 
-Built using the excellent [RLTK](https://github.com/amethyst/bracket-lib) (Roguelike Toolkit) library.
+Built using the excellent [RLTK](https://github.com/amethyst/bracket-lib) (Roguelike Toolkit) library and following the [tutorial](https://bfnightly.bracketproductions.com/chapter_0.html) from Herbert Wolverson.
 
