@@ -93,17 +93,17 @@ impl State {
             }
 
             let bp = backpack.get(entity);
-            if let Some(bp) = bp {
-                if bp.owner == *player_entity {
-                    should_delete = false;
-                }
+            if let Some(bp) = bp
+                && bp.owner == *player_entity
+            {
+                should_delete = false;
             }
 
             let eq = equipped.get(entity);
-            if let Some(eq) = eq {
-                if eq.owner == *player_entity {
-                    should_delete = false;
-                }
+            if let Some(eq) = eq
+                && eq.owner == *player_entity
+            {
+                should_delete = false;
             }
 
             if should_delete {

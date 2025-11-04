@@ -1,54 +1,48 @@
 use rltk::RandomNumberGenerator;
 
-pub struct RandomEntry {
-    name: String,
+pub struct RandomEntry<T: Clone> {
+    value: T,
     weight: i32,
-}
-impl RandomEntry {
-    pub fn new<S: ToString>(name: S, weight: i32) -> RandomEntry {
-        RandomEntry {
-            name: name.to_string(),
-            weight,
-        }
-    }
 }
 
 #[derive(Default)]
-pub struct RandomTable {
-    entries: Vec<RandomEntry>,
+pub struct RandomTable<T: Clone> {
+    entries: Vec<RandomEntry<T>>,
     total_weight: i32,
 }
-impl RandomTable {
-    pub fn new() -> RandomTable {
+impl<T> RandomTable<T>
+where
+    T: Clone,
+{
+    pub fn new() -> RandomTable<T> {
         RandomTable {
             entries: Vec::new(),
             total_weight: 0,
         }
     }
 
-    pub fn add<S: ToString>(mut self, name: S, weight: i32) -> RandomTable {
+    pub fn add(mut self, value: T, weight: i32) -> RandomTable<T> {
         self.total_weight += weight;
-        self.entries
-            .push(RandomEntry::new(name.to_string(), weight));
+        self.entries.push(RandomEntry { value, weight });
         self
     }
 
-    pub fn roll(&self, rng: &mut RandomNumberGenerator) -> String {
+    pub fn roll(&self, rng: &mut RandomNumberGenerator) -> Option<T> {
         if self.total_weight == 0 {
-            return "None".to_string();
+            return None;
         }
         let mut roll = rng.roll_dice(1, self.total_weight) - 1;
         let mut index: usize = 0;
 
         while roll > 0 {
             if roll < self.entries[index].weight {
-                return self.entries[index].name.clone();
+                return Some(self.entries[index].value.clone());
             }
 
             roll -= self.entries[index].weight;
             index += 1;
         }
 
-        "None".to_string()
+        None
     }
 }

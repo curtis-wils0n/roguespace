@@ -56,15 +56,12 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
 pub fn player_input(gs: &mut State, ctx: &mut Rltk) -> RunState {
     if ctx.shift {
         match ctx.key {
-            None => return RunState::AwaitingInput,
-            Some(key) => match key {
-                VirtualKeyCode::Period => {
-                    if try_next_level(&mut gs.ecs) {
-                        return RunState::NextLevel;
-                    }
+            Some(VirtualKeyCode::Period) => {
+                if try_next_level(&mut gs.ecs) {
+                    return RunState::NextLevel;
                 }
-                _ => return RunState::AwaitingInput,
-            },
+            }
+            None | Some(_) => return RunState::AwaitingInput,
         }
     }
     match ctx.key {
