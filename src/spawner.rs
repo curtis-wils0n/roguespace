@@ -1,7 +1,7 @@
 use super::{
-    AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, EquipmentSlot, Equippable,
-    InflictsDamage, Item, MAP_WIDTH, Monster, Name, Player, Position, ProvidesHealing, Ranged,
-    Rect, Renderable, SerializeMe, Viewshed,
+    AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DefenseBonus, EquipmentSlot,
+    Equippable, InflictsDamage, Item, MAP_WIDTH, MeleePowerBonus, Monster, Name, Player, Position,
+    ProvidesHealing, Ranged, Rect, Renderable, SerializeMe, Viewshed,
 };
 use crate::random_table::RandomTable;
 use rltk::{RGB, RandomNumberGenerator};
@@ -255,6 +255,7 @@ fn dagger(ecs: &mut World, x: i32, y: i32) {
         .with(Equippable {
             slot: EquipmentSlot::Melee,
         })
+        .with(MeleePowerBonus { power: 2 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
@@ -275,6 +276,7 @@ fn shield(ecs: &mut World, x: i32, y: i32) {
         .with(Equippable {
             slot: EquipmentSlot::Shield,
         })
+        .with(DefenseBonus { defense: 2 })
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }

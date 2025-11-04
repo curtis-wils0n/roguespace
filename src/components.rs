@@ -1,5 +1,6 @@
 use rltk::RGB;
 use serde::{Deserialize, Serialize};
+#[allow(deprecated)]
 use specs::error::NoError;
 use specs::prelude::*;
 use specs::saveload::{ConvertSaveload, Marker};
@@ -150,4 +151,14 @@ pub struct Equippable {
 pub struct Equipped {
     pub owner: Entity,
     pub slot: EquipmentSlot,
+}
+
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct MeleePowerBonus {
+    pub power: i32,
+}
+
+#[derive(Component, ConvertSaveload, Clone)]
+pub struct DefenseBonus {
+    pub defense: i32,
 }

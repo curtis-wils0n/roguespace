@@ -1,5 +1,5 @@
+use std::convert::Infallible;
 use super::components::*;
-use specs::error::NoError;
 use specs::prelude::*;
 use specs::saveload::{
     DeserializeComponents, MarkedBuilder, SerializeComponents, SimpleMarker, SimpleMarkerAllocator,
@@ -11,7 +11,7 @@ use std::path::Path;
 macro_rules! serialize_individually {
     ($ecs:expr, $ser:expr, $data:expr, $( $type:ty),*) => {
         $(
-        SerializeComponents::<NoError, SimpleMarker<SerializeMe>>::serialize(
+        SerializeComponents::<Infallible, SimpleMarker<SerializeMe>>::serialize(
             &( $ecs.read_storage::<$type>(), ),
             &$data.0,
             &$data.1,
@@ -63,7 +63,9 @@ pub fn savegame(ecs: &mut World) {
             WantsToDropItem,
             SerializationHelper,
             Equippable,
-            Equipped
+            Equipped,
+            MeleePowerBonus,
+            DefenseBonus
         );
     }
     ecs.delete_entity(save_helper).expect("Crash on cleanup");
@@ -76,7 +78,7 @@ pub fn does_save_exist() -> bool {
 macro_rules! deserialize_individually {
     ($ecs:expr, $de:expr, $data:expr, $($type:ty),*) => {
         $(
-        DeserializeComponents::<NoError, _>::deserialize(
+        DeserializeComponents::<Infallible, _>::deserialize(
             &mut ( &mut $ecs.write_storage::<$type>(), ),
             &mut $data.0,
             &mut $data.1,
@@ -137,7 +139,9 @@ pub fn load_game(ecs: &mut World) {
             WantsToDropItem,
             SerializationHelper,
             Equippable,
-            Equipped
+            Equipped,
+            MeleePowerBonus,
+            DefenseBonus
         );
     }
 
