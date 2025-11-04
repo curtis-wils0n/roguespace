@@ -104,13 +104,13 @@ fn health_potion(ecs: &mut World, x: i32, y: i32) {
         .build();
 }
 
-fn create_base_scroll<'a, S: ToString>(
-    ecs: &'a mut World,
+fn create_base_scroll<S: ToString>(
+    ecs: &mut World,
     x: i32,
     y: i32,
     name: S,
     fg: RGB,
-) -> EntityBuilder<'a> {
+) -> EntityBuilder<'_> {
     ecs.create_entity()
         .with(Position { x, y })
         .with(Renderable {
