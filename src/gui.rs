@@ -175,7 +175,7 @@ fn item_menu(gs: &mut State, ctx: &mut Rltk, title: &str) -> (ItemMenuResult, Op
     {
         item_groups
             .entry(name.name.clone())
-            .or_insert_with(Vec::new)
+            .or_default()
             .push(entity);
     }
 
