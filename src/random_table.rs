@@ -22,8 +22,10 @@ where
     }
 
     pub fn add(mut self, value: T, weight: i32) -> RandomTable<T> {
-        self.total_weight += weight;
-        self.entries.push(RandomEntry { value, weight });
+        if weight > 0 {
+            self.total_weight += weight;
+            self.entries.push(RandomEntry { value, weight });
+        }
         self
     }
 
