@@ -485,7 +485,24 @@ pub fn remove_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Opti
         .filter(|item| item.0.owner == *player_entity);
     let count = inventory.count();
 
-    let mut y = (25 - (count / 2)) as i32;
+    let mut y = (25 - count / 2) as i32;
+    BTerm::set_active_console(ctx, 0);
+    let box_width = 31;
+    let box_height = (count + 3) as i32;
+    for dy in 0..=box_height {
+        for dx in 0..=box_width {
+            ctx.set(
+                15 + dx,
+                y - 2 + dy,
+                RGB::named(rltk::BLACK),
+                RGB::named(rltk::BLACK),
+                0,
+            );
+        }
+    }
+
+    BTerm::set_active_console(ctx, 2);
+
     ctx.draw_box(
         15,
         y - 2,
@@ -543,4 +560,43 @@ pub fn remove_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Opti
     }
 
     handle_item_selection(ctx, count, &equippable)
+}
+
+#[derive(PartialEq, Copy, Clone)]
+pub enum GameOverResult {
+    NoSelection,
+    QuitToMenu,
+}
+
+pub fn game_over(ctx: &mut Rltk) -> GameOverResult {
+    ctx.print_color_centered(
+        15,
+        RGB::named(rltk::YELLOW),
+        RGB::named(rltk::BLACK),
+        "Your journey has ended!",
+    );
+    ctx.print_color_centered(
+        17,
+        RGB::named(rltk::WHITE),
+        RGB::named(rltk::BLACK),
+        "One day, we'll tell you all about how you did.",
+    );
+    ctx.print_color_centered(
+        18,
+        RGB::named(rltk::WHITE),
+        RGB::named(rltk::BLACK),
+        "That day, sadly, is not in this chapter..",
+    );
+
+    ctx.print_color_centered(
+        20,
+        RGB::named(rltk::MAGENTA),
+        RGB::named(rltk::BLACK),
+        "Press any key to return to the menu.",
+    );
+
+    match ctx.key {
+        None => GameOverResult::NoSelection,
+        Some(_) => GameOverResult::QuitToMenu,
+    }
 }
