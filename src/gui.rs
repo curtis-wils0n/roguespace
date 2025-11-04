@@ -512,7 +512,8 @@ pub fn remove_item_menu(gs: &mut State, ctx: &mut Rltk) -> (ItemMenuResult, Opti
     let mut equippable: Vec<Entity> = Vec::new();
     for (j, (entity, _pack, name)) in (&entities, &backpack, &names)
         .join()
-        .filter(|item| item.1.owner == *player_entity).enumerate()
+        .filter(|item| item.1.owner == *player_entity)
+        .enumerate()
     {
         ctx.set(
             17,

@@ -1,9 +1,9 @@
-use std::convert::Infallible;
 use super::components::*;
 use specs::prelude::*;
 use specs::saveload::{
     DeserializeComponents, MarkedBuilder, SerializeComponents, SimpleMarker, SimpleMarkerAllocator,
 };
+use std::convert::Infallible;
 use std::fs;
 use std::fs::File;
 use std::path::Path;
