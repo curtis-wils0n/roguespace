@@ -104,18 +104,14 @@ fn health_potion(ecs: &mut World, x: i32, y: i32) {
         .build();
 }
 
-fn scroll<S: ToString>(
-    ecs: &mut World,
+fn create_base_scroll<'a, S: ToString>(
+    ecs: &'a mut World,
     x: i32,
     y: i32,
     name: S,
     fg: RGB,
-    damage: Option<i32>,
-    aoe_radius: Option<i32>,
-    confusion_turns: Option<i32>,
-) {
-    let mut entity_builder = ecs
-        .create_entity()
+) -> EntityBuilder<'a> {
+    ecs.create_entity()
         .with(Position { x, y })
         .with(Renderable {
             glyph: 768,
@@ -128,60 +124,27 @@ fn scroll<S: ToString>(
         })
         .with(Item {})
         .with(Consumable {})
-        .with(Ranged { range: 6 });
-
-    if let Some(dmg) = damage {
-        entity_builder = entity_builder.with(InflictsDamage { damage: dmg });
-    }
-
-    if let Some(radius) = aoe_radius {
-        entity_builder = entity_builder.with(AreaOfEffect { radius });
-    }
-
-    if let Some(turns) = confusion_turns {
-        entity_builder = entity_builder.with(Confusion { turns });
-    }
-
-    entity_builder.marked::<SimpleMarker<SerializeMe>>().build();
+        .with(Ranged { range: 6 })
+        .marked::<SimpleMarker<SerializeMe>>()
 }
 
 fn magic_missile_scroll(ecs: &mut World, x: i32, y: i32) {
-    scroll(
-        ecs,
-        x,
-        y,
-        "Magic Missile Scroll",
-        RGB::named(rltk::CYAN),
-        Some(8),
-        None,
-        None,
-    );
+    create_base_scroll(ecs, x, y, "Magic Missile Scroll", RGB::named(rltk::CYAN))
+        .with(InflictsDamage { damage: 8 })
+        .build();
 }
 
 fn fireball_scroll(ecs: &mut World, x: i32, y: i32) {
-    scroll(
-        ecs,
-        x,
-        y,
-        "Fireball Scroll",
-        RGB::named(rltk::ORANGE),
-        Some(20),
-        Some(3),
-        None,
-    );
+    create_base_scroll(ecs, x, y, "Fireball Scroll", RGB::named(rltk::ORANGE))
+        .with(InflictsDamage { damage: 20 })
+        .with(AreaOfEffect { radius: 3 })
+        .build();
 }
 
 fn confusion_scroll(ecs: &mut World, x: i32, y: i32) {
-    scroll(
-        ecs,
-        x,
-        y,
-        "Confusion Scroll",
-        RGB::named(rltk::PINK),
-        None,
-        None,
-        Some(4),
-    );
+    create_base_scroll(ecs, x, y, "Confusion Scroll", RGB::named(rltk::PINK))
+        .with(Confusion { turns: 4 })
+        .build();
 }
 
 fn room_table(map_depth: i32) -> RandomTable {
