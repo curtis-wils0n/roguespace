@@ -147,57 +147,53 @@ fn confusion_scroll(ecs: &mut World, x: i32, y: i32) {
         .build();
 }
 
-fn room_table(map_depth: i32) -> RandomTable {
-    RandomTable::new()
-        .add("Goblin", 10)
-        .add("Orc", 1 + map_depth)
-        .add("Health Potion", 7)
-        .add("Fireball Scroll", 2 + map_depth)
-        .add("Confusion Scroll", 2 + map_depth)
-        .add("Magic Missile Scroll", 4)
-        .add("Dagger", 3)
-        .add("Shield", 3)
+type EntitySpawner = for<'a> fn(ecs: &'a mut World, x: i32, y: i32);
+
+fn room_table(map_depth: i32) -> RandomTable<EntitySpawner> {
+    RandomTable::<EntitySpawner>::new()
+        .add(goblin, 10)
+        .add(orc, 1 + map_depth)
+        .add(health_potion, 7)
+        .add(fireball_scroll, 2 + map_depth)
+        .add(confusion_scroll, 2 + map_depth)
+        .add(magic_missile_scroll, 4)
+        .add(dagger, 3)
+        .add(shield, 3)
 }
 
-#[allow(clippy::map_entry)]
 pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
     let spawn_table = room_table(map_depth);
-    let mut spawn_points: HashMap<usize, String> = HashMap::new();
+    let mut spawn_points: HashMap<usize, Option<EntitySpawner>> = HashMap::new();
     {
         let mut rng = ecs.write_resource::<RandomNumberGenerator>();
         let num_spawns = rng.roll_dice(1, MAX_MONSTERS + 3) + (map_depth - 1) - 3;
 
-        for _i in 0..num_spawns {
-            let mut added = false;
+        for _ in 0..num_spawns {
             let mut tries = 0;
-            while !added && tries < 20 {
+            while tries < 20 {
                 let x = (room.x1 + rng.roll_dice(1, i32::abs(room.x2 - room.x1))) as usize;
                 let y = (room.y1 + rng.roll_dice(1, i32::abs(room.y2 - room.y1))) as usize;
                 let idx = (y * MAP_WIDTH) + x;
-                if !spawn_points.contains_key(&idx) {
-                    spawn_points.insert(idx, spawn_table.roll(&mut rng));
-                    added = true;
-                } else {
+
+                if spawn_points.contains_key(&idx) {
+                    // We're already spawning something at this location, so we try again
                     tries += 1;
+                    continue;
                 }
+
+                // We've found a good spot, so we add a spawn and move on
+                spawn_points.insert(idx, spawn_table.roll(&mut rng));
+                break;
             }
         }
     }
 
-    for spawn in spawn_points.iter() {
-        let x = (*spawn.0 % MAP_WIDTH) as i32;
-        let y = (*spawn.0 / MAP_WIDTH) as i32;
+    for (spawn_index, spawner) in spawn_points.iter() {
+        let x = (*spawn_index % MAP_WIDTH) as i32;
+        let y = (*spawn_index / MAP_WIDTH) as i32;
 
-        match spawn.1.as_ref() {
-            "Goblin" => goblin(ecs, x, y),
-            "Orc" => orc(ecs, x, y),
-            "Health Potion" => health_potion(ecs, x, y),
-            "Fireball Scroll" => fireball_scroll(ecs, x, y),
-            "Confusion Scroll" => confusion_scroll(ecs, x, y),
-            "Magic Missile Scroll" => magic_missile_scroll(ecs, x, y),
-            "Dagger" => dagger(ecs, x, y),
-            "Shield" => shield(ecs, x, y),
-            _ => {}
+        if let Some(spawner) = spawner {
+            spawner(ecs, x, y);
         }
     }
 }
