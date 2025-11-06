@@ -3,6 +3,7 @@ use super::{
     InflictsDamage, Map, Name, Position, ProvidesHealing, SufferDamage, WantsToDropItem,
     WantsToPickupItem, WantsToRemoveItem, WantsToUseItem, gamelog::GameLog,
 };
+use crate::particle_system::ParticleBuilder;
 use specs::prelude::*;
 
 pub struct ItemCollectionSystem {}
@@ -72,6 +73,8 @@ impl<'a> System<'a> for ItemUseSystem {
         ReadStorage<'a, Equippable>,
         WriteStorage<'a, Equipped>,
         WriteStorage<'a, InBackpack>,
+        WriteExpect<'a, ParticleBuilder>,
+        ReadStorage<'a, Position>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -92,6 +95,8 @@ impl<'a> System<'a> for ItemUseSystem {
             equippable,
             mut equipped,
             mut backpack,
+            mut particle_builder,
+            positions,
         ) = data;
 
         for (entity, use_item) in (&entities, &wants_use).join() {
@@ -187,6 +192,19 @@ impl<'a> System<'a> for ItemUseSystem {
                                     names.get(use_item.item).unwrap().name,
                                     healer.heal_amount
                                 ));
+                            }
+                            used_item = true;
+
+                            let pos = positions.get(*target);
+                            if let Some(pos) = pos {
+                                particle_builder.request(
+                                    pos.x,
+                                    pos.y,
+                                    rltk::RGB::named(rltk::GREEN),
+                                    rltk::RGB::named(rltk::BLACK),
+                                    529,
+                                    200.0,
+                                );
                             }
                         }
                     }
