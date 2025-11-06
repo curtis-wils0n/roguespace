@@ -1,7 +1,7 @@
 use super::{
     AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DefenseBonus, EquipmentSlot,
-    Equippable, InflictsDamage, Item, MAP_WIDTH, Map, TileType, MeleePowerBonus, Monster, Name, Player,
-    Position, ProvidesHealing, Ranged, Rect, Renderable, SerializeMe, Viewshed,
+    Equippable, InflictsDamage, Item, MAP_WIDTH, Map, MeleePowerBonus, Monster, Name, Player,
+    Position, ProvidesHealing, Ranged, Rect, Renderable, SerializeMe, TileType, Viewshed,
 };
 use crate::random_table::RandomTable;
 use rltk::{RGB, RandomNumberGenerator};
