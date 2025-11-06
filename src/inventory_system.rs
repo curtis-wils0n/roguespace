@@ -127,6 +127,14 @@ impl<'a> System<'a> for ItemUseSystem {
                                 for mob in map.tile_content[idx].iter() {
                                     targets.push(*mob);
                                 }
+                                particle_builder.request(
+                                    tile_idx.x,
+                                    tile_idx.y,
+                                    rltk::RGB::named(rltk::ORANGE),
+                                    rltk::RGB::named(rltk::BLACK),
+                                    617,
+                                    200.0,
+                                )
                             }
                         }
                     }
@@ -225,6 +233,18 @@ impl<'a> System<'a> for ItemUseSystem {
                                 "You use {} on {}, inflicting {} hp.",
                                 item_name.name, mob_name.name, damage.damage
                             ));
+
+                            let pos = positions.get(*mob);
+                            if let Some(pos) = pos {
+                                particle_builder.request(
+                                    pos.x,
+                                    pos.y,
+                                    rltk::RGB::named(rltk::RED),
+                                    rltk::RGB::named(rltk::BLACK),
+                                    575,
+                                    200.0,
+                                )
+                            }
                         }
 
                         used_item = true;
@@ -248,7 +268,21 @@ impl<'a> System<'a> for ItemUseSystem {
                                     "You use {} on {}, confusing them.",
                                     item_name.name, mob_name.name
                                 ));
+
+                                let pos = positions.get(*mob);
+                                if let Some(pos) = pos {
+                                    particle_builder.request(
+                                        pos.x,
+                                        pos.y,
+                                        rltk::RGB::named(rltk::MAGENTA),
+                                        rltk::RGB::named(rltk::BLACK),
+                                        574,
+                                        200.0,
+                                    )
+                                }
                             }
+
+                            used_item = true;
                         }
                     }
                 }
