@@ -138,7 +138,7 @@ impl State {
         }
 
         for room in world_map.rooms.iter().skip(1) {
-            spawner::spawn_room(&mut self.ecs, room, current_depth + 1);
+            spawner::spawn_room(&mut self.ecs, room, current_depth + 1, &world_map);
         }
 
         let (player_x, player_y) = world_map.rooms[0].center();
@@ -192,7 +192,7 @@ impl State {
 
         // Spawn bad guys
         for room in worldmap.rooms.iter().skip(1) {
-            spawner::spawn_room(&mut self.ecs, room, 1);
+            spawner::spawn_room(&mut self.ecs, room, 1, &worldmap);
         }
 
         // Place the player and update resources
@@ -259,7 +259,8 @@ impl GameState for State {
                     for (pos, render) in data.iter() {
                         let idx = map.xy_idx(pos.x, pos.y);
                         if map.visible_tiles[idx] {
-                            ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
+                            let bg = get_tile_bg(&map, idx);
+                            ctx.set(pos.x, pos.y, render.fg, bg, render.glyph);
                         }
                     }
                 }
@@ -485,7 +486,7 @@ fn main() -> rltk::BError {
 
     gs.ecs.insert(rltk::RandomNumberGenerator::new());
     for room in map.rooms.iter().skip(1) {
-        spawner::spawn_room(&mut gs.ecs, room, 1);
+        spawner::spawn_room(&mut gs.ecs, room, 1, &map);
     }
 
     gs.ecs.insert(map);

@@ -234,7 +234,8 @@ pub fn draw_map(ecs: &World, ctx: &mut Rltk) {
                 bg = RGB::from_f32(0.75, 0., 0.);
             }
             if !map.visible_tiles[idx] {
-                fg = fg.to_greyscale()
+                fg = fg.to_greyscale();
+                bg = bg.to_greyscale();
             }
             ctx.set(x, y, fg, bg, glyph);
         }
@@ -292,4 +293,12 @@ fn is_revealed_and_wall(map: &Map, x: i32, y: i32) -> bool {
     }
     let idx = map.xy_idx(x, y);
     map.tiles[idx] == TileType::Wall && map.revealed_tiles[idx]
+}
+
+pub fn get_tile_bg(map: &Map, idx: usize) -> RGB {
+    let mut bg = RGB::from_f32(0., 0., 0.);
+    if map.bloodstains.contains(&idx) {
+        bg = RGB::from_f32(0.75, 0., 0.);
+    }
+    bg
 }

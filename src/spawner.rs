@@ -1,7 +1,7 @@
 use super::{
     AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DefenseBonus, EquipmentSlot,
-    Equippable, InflictsDamage, Item, MAP_WIDTH, MeleePowerBonus, Monster, Name, Player, Position,
-    ProvidesHealing, Ranged, Rect, Renderable, SerializeMe, Viewshed,
+    Equippable, InflictsDamage, Item, MAP_WIDTH, Map, TileType, MeleePowerBonus, Monster, Name, Player,
+    Position, ProvidesHealing, Ranged, Rect, Renderable, SerializeMe, Viewshed,
 };
 use crate::random_table::RandomTable;
 use rltk::{RGB, RandomNumberGenerator};
@@ -163,7 +163,7 @@ fn room_table(map_depth: i32) -> RandomTable<EntitySpawner> {
         .add(tower_shield, map_depth - 1)
 }
 
-pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
+pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32, map: &Map) {
     let spawn_table = room_table(map_depth);
     let mut spawn_points: HashMap<usize, Option<EntitySpawner>> = HashMap::new();
     {
@@ -179,6 +179,12 @@ pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32) {
 
                 if spawn_points.contains_key(&idx) {
                     // We're already spawning something at this location, so we try again
+                    tries += 1;
+                    continue;
+                }
+
+                // Don't spawn on DownStairs tiles
+                if map.tiles[idx] == TileType::DownStairs {
                     tries += 1;
                     continue;
                 }
