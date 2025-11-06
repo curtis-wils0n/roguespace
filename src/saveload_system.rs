@@ -66,7 +66,8 @@ pub fn savegame(ecs: &mut World) {
             Equipped,
             MeleePowerBonus,
             DefenseBonus,
-            WantsToRemoveItem
+            WantsToRemoveItem,
+            ParticleLifetime
         );
     }
     ecs.delete_entity(save_helper).expect("Crash on cleanup");
@@ -143,7 +144,8 @@ pub fn load_game(ecs: &mut World) {
             Equipped,
             MeleePowerBonus,
             DefenseBonus,
-            WantsToRemoveItem
+            WantsToRemoveItem,
+            ParticleLifetime
         );
     }
 
