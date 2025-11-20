@@ -1,7 +1,8 @@
 use super::{
     AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DefenseBonus, EquipmentSlot,
-    Equippable, InflictsDamage, Item, MAP_WIDTH, Map, MeleePowerBonus, Monster, Name, Player,
-    Position, ProvidesHealing, Ranged, Rect, Renderable, SerializeMe, TileType, Viewshed,
+    Equippable, HungerClock, HungerState, InflictsDamage, Item, MAP_WIDTH, Map, MeleePowerBonus,
+    Monster, Name, Player, Position, ProvidesHealing, Ranged, Rect, Renderable, SerializeMe,
+    TileType, Viewshed,
 };
 use crate::random_table::RandomTable;
 use rltk::{RGB, RandomNumberGenerator};
@@ -37,6 +38,10 @@ pub fn player(ecs: &mut World, player_x: i32, player_y: i32) -> Entity {
             hp: 30,
             defense: 2,
             power: 5,
+        })
+        .with(HungerClock {
+            state: HungerState::WellFed,
+            duration: 20,
         })
         .marked::<SimpleMarker<SerializeMe>>()
         .build()

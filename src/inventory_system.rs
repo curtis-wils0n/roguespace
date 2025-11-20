@@ -201,7 +201,6 @@ impl<'a> System<'a> for ItemUseSystem {
                                     healer.heal_amount
                                 ));
                             }
-                            used_item = true;
 
                             let pos = positions.get(*target);
                             if let Some(pos) = pos {
@@ -215,6 +214,8 @@ impl<'a> System<'a> for ItemUseSystem {
                                 );
                             }
                         }
+
+                        used_item = true;
                     }
                 }
             }
