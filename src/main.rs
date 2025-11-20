@@ -25,14 +25,14 @@ mod gamelog;
 mod gui;
 mod inventory_system;
 mod spawner;
+use crate::hunger_system::HungerSystem;
 use gamelog::GameLog;
 use inventory_system::{ItemCollectionSystem, ItemDropSystem, ItemRemoveSystem, ItemUseSystem};
-use crate::hunger_system::HungerSystem;
 
+mod hunger_system;
 mod particle_system;
 mod random_table;
 pub mod saveload_system;
-mod hunger_system;
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum RunState {
@@ -486,6 +486,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<WantsToRemoveItem>();
     gs.ecs.register::<ParticleLifetime>();
     gs.ecs.register::<HungerClock>();
+    gs.ecs.register::<ProvidesFood>();
 
     gs.ecs.insert(SimpleMarkerAllocator::<SerializeMe>::new());
 

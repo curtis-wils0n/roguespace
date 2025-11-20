@@ -68,7 +68,8 @@ pub fn savegame(ecs: &mut World) {
             DefenseBonus,
             WantsToRemoveItem,
             ParticleLifetime,
-            HungerClock
+            HungerClock,
+            ProvidesFood
         );
     }
     ecs.delete_entity(save_helper).expect("Crash on cleanup");
@@ -147,7 +148,8 @@ pub fn load_game(ecs: &mut World) {
             DefenseBonus,
             WantsToRemoveItem,
             ParticleLifetime,
-            HungerClock
+            HungerClock,
+            ProvidesFood
         );
     }
 

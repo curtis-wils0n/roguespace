@@ -1,7 +1,8 @@
 use super::{
-    AreaOfEffect, CombatStats, Confusion, Consumable, Equippable, Equipped, InBackpack,
-    InflictsDamage, Map, Name, Position, ProvidesHealing, SufferDamage, WantsToDropItem,
-    WantsToPickupItem, WantsToRemoveItem, WantsToUseItem, gamelog::GameLog,
+    AreaOfEffect, CombatStats, Confusion, Consumable, Equippable, Equipped, HungerClock,
+    HungerState, InBackpack, InflictsDamage, Map, Name, Position, ProvidesFood, ProvidesHealing,
+    SufferDamage, WantsToDropItem, WantsToPickupItem, WantsToRemoveItem, WantsToUseItem,
+    gamelog::GameLog,
 };
 use crate::particle_system::ParticleBuilder;
 use specs::prelude::*;
@@ -75,6 +76,8 @@ impl<'a> System<'a> for ItemUseSystem {
         WriteStorage<'a, InBackpack>,
         WriteExpect<'a, ParticleBuilder>,
         ReadStorage<'a, Position>,
+        ReadStorage<'a, ProvidesFood>,
+        WriteStorage<'a, HungerClock>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -97,6 +100,8 @@ impl<'a> System<'a> for ItemUseSystem {
             mut backpack,
             mut particle_builder,
             positions,
+            provides_food,
+            mut hunger_clock,
         ) = data;
 
         for (entity, use_item) in (&entities, &wants_use).join() {
@@ -249,6 +254,24 @@ impl<'a> System<'a> for ItemUseSystem {
                         }
 
                         used_item = true;
+                    }
+                }
+            }
+
+            let item_edible = provides_food.get(use_item.item);
+            match item_edible {
+                None => {}
+                Some(_) => {
+                    used_item = true;
+                    let target = targets[0];
+                    let hc = hunger_clock.get_mut(target);
+                    if let Some(hc) = hc {
+                        hc.state = HungerState::WellFed;
+                        hc.duration = 20;
+                        game_log.entries.push(format!(
+                            "You eat the {}.",
+                            names.get(use_item.item).unwrap().name
+                        ));
                     }
                 }
             }

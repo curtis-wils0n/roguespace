@@ -61,7 +61,8 @@ impl<'a> System<'a> for HungerSystem {
                         }
                         HungerState::Starving => {
                             if entity == *player_entity {
-                                log.entries.push("Your hunger pangs are getting painful!".to_string());
+                                log.entries
+                                    .push("Your hunger pangs are getting painful!".to_string());
                             }
                             SufferDamage::new_damage(&mut inflict_damage, entity, 1);
                         }

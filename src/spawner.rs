@@ -1,8 +1,8 @@
 use super::{
     AreaOfEffect, BlocksTile, CombatStats, Confusion, Consumable, DefenseBonus, EquipmentSlot,
     Equippable, HungerClock, HungerState, InflictsDamage, Item, MAP_WIDTH, Map, MeleePowerBonus,
-    Monster, Name, Player, Position, ProvidesHealing, Ranged, Rect, Renderable, SerializeMe,
-    TileType, Viewshed,
+    Monster, Name, Player, Position, ProvidesFood, ProvidesHealing, Ranged, Rect, Renderable,
+    SerializeMe, TileType, Viewshed,
 };
 use crate::random_table::RandomTable;
 use rltk::{RGB, RandomNumberGenerator};
@@ -166,6 +166,7 @@ fn room_table(map_depth: i32) -> RandomTable<EntitySpawner> {
         .add(shield, 3)
         .add(longsword, map_depth - 1)
         .add(tower_shield, map_depth - 1)
+        .add(rations, 10)
 }
 
 pub fn spawn_room(ecs: &mut World, room: &Rect, map_depth: i32, map: &Map) {
@@ -291,6 +292,25 @@ fn tower_shield(ecs: &mut World, x: i32, y: i32) {
             slot: EquipmentSlot::Shield,
         })
         .with(DefenseBonus { defense: 3 })
+        .marked::<SimpleMarker<SerializeMe>>()
+        .build();
+}
+
+fn rations(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position { x, y })
+        .with(Renderable {
+            glyph: 817,
+            fg: RGB::named(rltk::SANDYBROWN),
+            bg: RGB::named(rltk::BLACK),
+            render_order: 2,
+        })
+        .with(Name {
+            name: "Rations".to_string(),
+        })
+        .with(Item {})
+        .with(ProvidesFood {})
+        .with(Consumable {})
         .marked::<SimpleMarker<SerializeMe>>()
         .build();
 }
